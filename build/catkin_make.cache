@@ -1,0 +1,2 @@
+exo_control:skin_control:tutorial_2
+-DCATKIN_DEVEL_PREFIX=/home/jplazag/exo_ws/devel -DCMAKE_INSTALL_PREFIX=/home/jplazag/exo_ws/install -G Unix Makefiles
