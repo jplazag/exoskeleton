@@ -42,7 +42,7 @@ namespace ExoControllers{
                 m_tao = (m_L2 + m_L3 * std::cos(q3) - 0.2 * std::cos(q3)) * m_kp * (Ws - m_W_des);
                 break;
             case 2:
-                m_tao = m_L3 * m_kp * (Ws - m_W_des);
+                m_tao = - m_L3 * m_kp * (Ws - m_W_des);
                 break;
             
         }
