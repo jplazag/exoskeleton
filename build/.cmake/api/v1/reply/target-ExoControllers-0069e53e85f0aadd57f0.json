@@ -633,7 +633,8 @@
 			"sourceIndexes" : 
 			[
 				2,
-				3
+				3,
+				4
 			]
 		}
 	],
@@ -659,6 +660,11 @@
 		{
 			"backtrace" : 1,
 			"path" : "exo_control/include/exo_control/exo_pos_control.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"path" : "exo_control/include/exo_control/exo_pos_control_respald.h",
 			"sourceGroupIndex" : 1
 		}
 	],

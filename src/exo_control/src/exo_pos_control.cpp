@@ -79,7 +79,8 @@ namespace ExoControllers{
                              double t0, double tf, double tc,
                              bool startFlag, int q_ind)
     {
-      VectorXd static aq1(6);
+      MatrixXd static aq1(2,6);
+      VectorXd aq(6);
       VectorXd static q(6);
       MatrixXd static T(6,6);
       VectorXd p(6);
@@ -97,17 +98,18 @@ namespace ExoControllers{
                  0, 0, 2, 6*tf, 12*pow(tf,2), 20*pow(tf,3);     
 
 
-        aq1 = T.colPivHouseholderQr().solve(q);
+        aq1.block<1,6>(q_ind-1,0) = T.colPivHouseholderQr().solve(q);
       }
 
       if(tc<=tf)
       {
-      p << 1, tc, pow(tc,2), pow(tc,3), pow(tc,4), pow(tc,5);
-      v << 0, 1, 2*tc, 3*pow(tc,2), 4*pow(tc,3), 5*pow(tc,4);
-      a << 0, 0, 2, 6*tc, 12*pow(tc,2), 20*pow(tc,3);
-      m_q_des(q_ind, 0) =  p.transpose()*aq1;
-      m_q_des(q_ind, 1) = v.transpose()*aq1;
-      m_q_des(q_ind, 2)  = a.transpose()*aq1;
+        aq = aq1.block<1,6>(q_ind-1,0);
+        p << 1, tc, pow(tc,2), pow(tc,3), pow(tc,4), pow(tc,5);
+        v << 0, 1, 2*tc, 3*pow(tc,2), 4*pow(tc,3), 5*pow(tc,4);
+        a << 0, 0, 2, 6*tc, 12*pow(tc,2), 20*pow(tc,3);
+        m_q_des(q_ind, 0) = p.transpose()*aq;
+        m_q_des(q_ind, 1) = v.transpose()*aq;
+        m_q_des(q_ind, 2) = a.transpose()*aq;
       }
       else{ 
         m_q_des(q_ind, 0) = qf;
@@ -175,7 +177,9 @@ namespace ExoControllers{
         Vector3d qddr = m_q_des.col(2) - m_kp*deltaQd; 
 
         Vector3d Sq = qd - qdr;
-        m_tao = -m_kd*Sq + YrTheta(q, qd, qdr, qddr);
+        m_tao = -m_kd*Sq;// + YrTheta(q, qd, qdr, qddr);
+
+        ROS_WARN_STREAM("m_tao: "<<m_tao);
 
         //std_msgs::Float64MultiArray msg_q_desired;
 

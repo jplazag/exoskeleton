@@ -298,14 +298,14 @@ int main( int argc, char** argv )
 
     //******************** Position Control *************************
 
-    // ExoControllers::PosControl posC(L1, L2, L3, m2, m3, b1, b2, k1, k2, theta1, theta2, g_vec[0], g_vec[1], g_vec[2],
-    //  I211, I222, I233, I311, I322, I333);
-    // Matrix3d qEnd;
-    // qEnd << 0, 0, 0,
-    //         deg2rad(45), 0, 0,
-    //         deg2rad(80), 0, 0; 
-    // double timeEnd = 2.5;
-    // posC.init(qEnd,timeEnd);
+    ExoControllers::PosControl posC(L1, L2, L3, m2, m3, b1, b2, k1, k2, theta1, theta2, g_vec[0], g_vec[1], g_vec[2],
+     I211, I222, I233, I311, I322, I333);
+    Matrix3d qEnd;
+    qEnd << 0, 0, 0,
+            deg2rad(45), 0, 0,
+            deg2rad(90), 0, 0; 
+    double timeEnd = 2.5;
+    posC.init(qEnd,timeEnd);
 
 
 
@@ -348,85 +348,84 @@ int main( int argc, char** argv )
 
 
 
-    // Matrix3d q_neu;
-    // while(ros::ok())
-    // {        
-    //     ros::spinOnce();        
-    //     //ROS_INFO_STREAM("Deb1");
-    //     g_vec[0] = gx1 * g;
-    //     g_vec[1] = gy1 * g;
-    //     //ROS_INFO_STREAM("Deb2");
-    //     m_matrix << I233 + I311 * pow(sin(q[2]),2) + I322 * pow(cos(q[2]),2) + pow(L1,2)*(m2 + m3) + L1*L2*cos(q[1])*(m2 + 2*m3) + 2*L1*L3*m3*cos(q[1])*cos(q[2]) + pow(L2,2) * (m2 / 4 + m3) + L3 * m3 * cos(q[2]) * (2 * L2 + L3 * cos(q[2])), I233 + I311 * pow(sin(q[2]),2) + I322 * pow(cos(q[2]),2) + L1*L2*m2*cos(q[1])/2 + L1*m3*cos(q[1])*(L2 + L3*cos(q[2])) + pow(L2,2) * (m2 / 4 + m3) + L3 * m3 * cos(q[2]) * (2 * L2 + L3 * cos(q[2])), -L1*L3*m3*sin(q[1])*sin(q[2]),
-    //                 I233 + I311 * pow(sin(q[2]),2) + I322 * pow(cos(q[2]),2) + L1*L2*m2*cos(q[1])/2 + L1*m3*cos(q[1])*(L2 + L3*cos(q[2])) + pow(L2,2) * (m2 / 4 + m3) + L3 * m3 * cos(q[2]) * (2 * L2 + L3 * cos(q[2])), I233 + I311 * pow(sin(q[2]),2) + I322 * pow(cos(q[2]),2) + pow(L2,2) * (m2 / 4 + m3) + L3 * m3 * cos(q[2]) * (2 * L2 + L3 * cos(q[2])), 0,
-    //                 -L1*L3*m3*sin(q[1])*sin(q[2]), 0, I333 + pow(L3,2) * m3;
+    Matrix3d q_neu;
+    while(ros::ok())
+    {        
+        ros::spinOnce();        
+        //ROS_INFO_STREAM("Deb1");
+        g_vec[0] = gx1 * g;
+        g_vec[1] = gy1 * g;
+        //ROS_INFO_STREAM("Deb2");
+        m_matrix << I233 + I311 * pow(sin(q[2]),2) + I322 * pow(cos(q[2]),2) + pow(L1,2)*(m2 + m3) + L1*L2*cos(q[1])*(m2 + 2*m3) + 2*L1*L3*m3*cos(q[1])*cos(q[2]) + pow(L2,2) * (m2 / 4 + m3) + L3 * m3 * cos(q[2]) * (2 * L2 + L3 * cos(q[2])), I233 + I311 * pow(sin(q[2]),2) + I322 * pow(cos(q[2]),2) + L1*L2*m2*cos(q[1])/2 + L1*m3*cos(q[1])*(L2 + L3*cos(q[2])) + pow(L2,2) * (m2 / 4 + m3) + L3 * m3 * cos(q[2]) * (2 * L2 + L3 * cos(q[2])), -L1*L3*m3*sin(q[1])*sin(q[2]),
+                    I233 + I311 * pow(sin(q[2]),2) + I322 * pow(cos(q[2]),2) + L1*L2*m2*cos(q[1])/2 + L1*m3*cos(q[1])*(L2 + L3*cos(q[2])) + pow(L2,2) * (m2 / 4 + m3) + L3 * m3 * cos(q[2]) * (2 * L2 + L3 * cos(q[2])), I233 + I311 * pow(sin(q[2]),2) + I322 * pow(cos(q[2]),2) + pow(L2,2) * (m2 / 4 + m3) + L3 * m3 * cos(q[2]) * (2 * L2 + L3 * cos(q[2])), 0,
+                    -L1*L3*m3*sin(q[1])*sin(q[2]), 0, I333 + pow(L3,2) * m3;
 
-    //     c_matrix << 0, 0, 0,
-    //                 0, (I311 * cos(q[2]) - I322 * cos(q[2]) - L2 * L3 * m3 - pow(L3,2) * m3 * cos(q[2])) * sin(q[2]) * qd[2], (I311 * cos(q[2]) - I322 * cos(q[2]) - L2 * L3 * m3 - pow(L3,2) * m3 * cos(q[2])) * sin(q[2]) * qd[1],
-    //                 0, -(I311 * cos(q[2]) - I322 * cos(q[2]) - L2 * L3 * m3 - pow(L3,2) * m3 * cos(q[2])) * sin(q[2]) * qd[1], 0;
-    //     g_matrix << 0,
-    //                 L2*m2/2*(-g_vec[0]*sin(q[1]) + g_vec[1]*cos(q[1])) - g_vec[0]*m3*(L2 + L3 * cos(q[2]))*sin(q[1]) + g_vec[1]*m3*(L2 + L3 * cos(q[2]))*cos(q[1]) - k1*(theta1 - q[1]),
-    //                 -m3*L3*sin(q[2])*(g_vec[0]*cos(q[1]) + g_vec[1]*sin(q[1])) - k2*(theta2 - q[2]);
-    //     b_matrix << 0,0,0,
-    //                 0,b1,0,
-    //                 0,0,b2;
-    //     //ROS_INFO_STREAM("Deb3");
+        c_matrix << 0, 0, 0,
+                    0, (I311 * cos(q[2]) - I322 * cos(q[2]) - L2 * L3 * m3 - pow(L3,2) * m3 * cos(q[2])) * sin(q[2]) * qd[2], (I311 * cos(q[2]) - I322 * cos(q[2]) - L2 * L3 * m3 - pow(L3,2) * m3 * cos(q[2])) * sin(q[2]) * qd[1],
+                    0, -(I311 * cos(q[2]) - I322 * cos(q[2]) - L2 * L3 * m3 - pow(L3,2) * m3 * cos(q[2])) * sin(q[2]) * qd[1], 0;
+        g_matrix << 0,
+                    L2*m2/2*(-g_vec[0]*sin(q[1]) + g_vec[1]*cos(q[1])) - g_vec[0]*m3*(L2 + L3 * cos(q[2]))*sin(q[1]) + g_vec[1]*m3*(L2 + L3 * cos(q[2]))*cos(q[1]) - k1*(theta1 - q[1]),
+                    -m3*L3*sin(q[2])*(g_vec[0]*cos(q[1]) + g_vec[1]*sin(q[1])) - k2*(theta2 - q[2]);
+        b_matrix << 0,0,0,
+                    0,b1,0,
+                    0,0,b2;
+        //ROS_INFO_STREAM("Deb3");
 
-    //     //Position control
+        //Position control
 
      
-    //     tao = posC.update(delta_t,q,qd,qdd);
+        tao = posC.update(delta_t,q,qd,qdd);
         
-    //     qdd= m_matrix.inverse() * (tao - g_matrix - (b_matrix + c_matrix) * qd);
+        qdd= m_matrix.inverse() * (tao - g_matrix - (b_matrix + c_matrix) * qd);
         
-    //     qd = delta_t*qdd + qd;
+        qd = delta_t*qdd + qd;
+
+        q_tot[0] = delta_t*qd[1] + q[1];
+        q_tot[1] = delta_t*qd[2] + q[2];
+        
+        if (q_tot[0] >= 1.7 || q_tot[0] <= 0.17 ){
+            qdd[1] = 0;
+            qd[1] = 0;
+        }
+        else {
+            q[1] = q_tot[0];
+        }
+        
+        if (q_tot[1] >= 1.7 || q_tot[1] <= 0.17 ){ //other limitations
+            qdd[2] = 0;
+            qd[2] = 0;
+        }
+        else {
+            q[2] = q_tot[1];
+        }
+
+        
+        q_neu << 0, 0, 0,
+                q[1], qd[1], qdd[1],
+                q[2], qd[2], qdd[2];
+
+
+        // ROS_WARN_STREAM("tao: "<<tao);
+        ROS_WARN_STREAM("qdd: "<<qdd);
+        ROS_WARN_STREAM("qd: "<<qd);
+        ROS_WARN_STREAM("q: "<<q);
+        // ROS_WARN_STREAM("error: "<<(q_neu - qEnd).norm());
+
+        q_ESP3[0] = q[1];
+        q_ESP3[1] = q[2];
+        // q_ESP3 = q[2];
+
+        msg_q_ESP3.data = q_ESP3;
+        exo_control_pub_q_ESP3.publish(msg_q_ESP3);
         
 
-    //     q_tot[0] = delta_t*qd[1] + q[1];
-    //     q_tot[1] = delta_t*qd[2] + q[2];
-        
-    //     if (q_tot[0] >= 1.7 || q_tot[0] <= 0.17 ){
-    //         qdd[1] = 0;
-    //         qd[1] = 0;
-    //     }
-    //     else {
-    //         q[1] = q_tot[0];
-    //     }
-        
-    //     if (q_tot[1] >= 1.7 || q_tot[1] <= 0.17 ){ //other limitations
-    //         qdd[2] = 0;
-    //         qd[2] = 0;
-    //     }
-    //     else {
-    //         q[2] = q_tot[1];
-    //     }
+        if ((q_neu - qEnd).norm() < 0.001) break; 
 
-        
-    //     q_neu << 0, 0, 0,
-    //             q[1], qd[1], qdd[1],
-    //             q[2], qd[2], qdd[2];
+        // if (!posC.get_m_startFlag()) break; 
 
-
-    //     ROS_WARN_STREAM("tao: "<<tao);
-    //     ROS_WARN_STREAM("qdd: "<<qdd);
-    //     ROS_WARN_STREAM("qd: "<<qd);
-    //     ROS_WARN_STREAM("q: "<<q);
-    //     ROS_WARN_STREAM("error: "<<(q_neu - qEnd).norm());
-
-    //     q_ESP3[0] = q[1];
-    //     q_ESP3[1] = q[2];
-    //     // q_ESP3 = q[2];
-
-    //     msg_q_ESP3.data = q_ESP3;
-    //     exo_control_pub_q_ESP3.publish(msg_q_ESP3);
-        
-
-    //     if ((q_neu - qEnd).norm() < 0.001) break; 
-
-    //     if (!posC.get_m_startFlag()) break; 
-
-    //     //
-    //     r.sleep();
-    // }
+        //
+        r.sleep();
+    }
 
 
 
