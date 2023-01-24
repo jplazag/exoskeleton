@@ -1,5 +1,6 @@
 #include<exo_control/exo_force_control.h>
 
+
 namespace ExoControllers{
 
     ForceControl::ForceControl(double L2, double L3)
@@ -39,10 +40,13 @@ namespace ExoControllers{
 
         switch(n_func){
             case 1:
-                m_tao = (m_L2 + m_L3 * std::cos(q3) - 0.2 * std::cos(q3)) * m_kp * (Ws - m_W_des);
+                m_tao = (m_L2 + m_L3 * std::cos(q3) - 0.2 * std::cos(q3)) * m_kp * (Ws - m_W_des); //Elbow with wrist
                 break;
             case 2:
                 m_tao = - m_L3 * m_kp * (Ws - m_W_des);
+                break;
+            case 3:
+                m_tao = m_L2 * m_kp * (Ws - m_W_des); //Elbow without wrist
                 break;
             
         }

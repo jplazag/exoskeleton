@@ -19,8 +19,6 @@ Eigen/Dense
 -
 std_msgs/Float64MultiArray.h
 /home/jplazag/exo_ws/src/exo_control/include/exo_control/std_msgs/Float64MultiArray.h
-vector
--
 
 /home/jplazag/exo_ws/src/exo_control/src/Applications/main_exo_control.cpp
 ros/ros.h
