@@ -160,15 +160,15 @@ namespace ExoControllers{
         ROS_WARN_STREAM("m_kd*Sq: "<<m_kd*Sq);
         
 
-        std_msgs::Float64MultiArray msg_q_desired;
+        // std_msgs::Float64MultiArray msg_q_desired;
 
-        q_desired[0] = m_q_des;
-        q_desired[1] = m_qd_des;
-        q_desired[2] = m_qdd_des;
+        // q_desired[0] = m_q_des;
+        // q_desired[1] = m_qd_des;
+        // q_desired[2] = m_qdd_des;
 
-        msg_q_desired.data = q_desired;
+        // msg_q_desired.data = q_desired;
 
-        exo_control_pub_q_desire.publish(msg_q_desired);
+        // exo_control_pub_q_desire.publish(msg_q_desired);
 
         return m_tao;
     }

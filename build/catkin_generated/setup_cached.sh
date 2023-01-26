@@ -7,4 +7,10 @@
 # new environment variables
 
 # modified environment variables
-export PWD='/home/jplazag/Documents/Juan Diego/TUM/Exoskeletons/Tutorial_4/exo_ws/build'
+export CMAKE_PREFIX_PATH='/home/jplazag/exo_ws/devel:/opt/ros/noetic'
+export LD_LIBRARY_PATH='/home/jplazag/exo_ws/devel/lib:/opt/ros/noetic/lib'
+export PKG_CONFIG_PATH='/home/jplazag/exo_ws/devel/lib/pkgconfig:/opt/ros/noetic/lib/pkgconfig'
+export PWD='/home/jplazag/exo_ws/build'
+export PYTHONPATH='/home/jplazag/exo_ws/devel/lib/python3/dist-packages:/opt/ros/noetic/lib/python3/dist-packages'
+export ROSLISP_PACKAGE_DIRECTORIES='/home/jplazag/exo_ws/devel/share/common-lisp'
+export ROS_PACKAGE_PATH='/home/jplazag/exo_ws/src:/opt/ros/noetic/share'

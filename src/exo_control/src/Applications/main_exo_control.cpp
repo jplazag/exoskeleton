@@ -125,28 +125,27 @@ int main( int argc, char** argv )
 
     ros::NodeHandle n;
 
-    std::vector<double> q_ESP3 = {0, 0};
-    // double q_ESP3;
+    // *********************** Nodes for q position *****************************
 
+    std::vector<double> q_ESP3 = {0, 0};
+    std_msgs::Float64MultiArray msg_q_ESP3;
     ros::Publisher exo_control_pub_q_ESP3 = n.advertise<std_msgs::Float64MultiArray>("q_control_publisher", 1); 
-    // ros::Publisher exo_control_pub_q_ESP3 = n.advertise<std_msgs::Float64>("q_control_publisher", 1000);
 
     std::vector<double> q_state = {0, 0, 0};
-
+    std_msgs::Float64MultiArray msg_q_state;
     ros::Publisher exo_control_pub_q_state = n.advertise<std_msgs::Float64MultiArray>("q_state", 1); 
 
+
+    // *********************** Skin-patch nodes for the elbow *****************************
+
     ros::Subscriber exo_control_sub_gravity1 = n.subscribe("patch1", 1, chatterCallback_g);
-
-    std::vector<double> gravity = {0, 0, 0};
-
-    ros::Publisher exo_control_pub_gravity = n.advertise<std_msgs::Float64MultiArray>("g", 1); 
 
     ros::Subscriber exo_control_sub_skinpatch2 = n.subscribe("patch2", 1, chatterCallback_p);
 
     ros::Subscriber exo_control_sub_skinpatch3 = n.subscribe("patch3", 1, chatterCallback_p);
 
 
-    // *********************** Nodes for the wrist *****************************
+    // *********************** Skin-patch nodes for the wrist *****************************
 
     ros::Subscriber exo_control_sub_skinpatch4 = n.subscribe("patch4", 1, chatterCallback_p);
 
@@ -155,8 +154,9 @@ int main( int argc, char** argv )
 
 
     //*************************** q_des Publisher ******************************
-    // ros::Publisher exo_control_pub_q_desired = n.advertise<std_msgs::Float64MultiArray>("q_des", 1000);
 
+    std_msgs::Float64 msg_q_des;
+    ros::Publisher exo_control_pub_q_desired = n.advertise<std_msgs::Float64MultiArray>("q_des", 1);
 
     ros::Rate r(100);
 
@@ -164,7 +164,9 @@ int main( int argc, char** argv )
 
     double delta_t = 1/(double)200; 
 
-    // load your params
+    // ************************** Parameters from yaml file ***************************************
+
+    // ************************** Shoulder and elbow parameters ***********************************
     double L1;
     std::string ns="~L1";
     std::stringstream s;
@@ -263,30 +265,7 @@ int main( int argc, char** argv )
     s<<ns;
     ros::param::get(s.str(),I333);
     
-
-
-    // double tao = 0; 
     
-    // //init params 
-    // double q1 = deg2rad(50); 
-    // double qd1 = 0;
-    // double qdd1 = 0;  
-    
-    // double gx = 0;
-    // double gy = 0;
-    // double gz = 0;
-
-    // double m_matrix; 
-    // double c_matrix;
-    // double g_matrix;
-    // double b_matrix;
-
-    Vector3d q(0, deg2rad(10), deg2rad(90));
-    Vector3d qd(0, 0, 0);
-    Vector3d qdd(0, 0, 0);
-
-    Vector3d g_vec(g, 0, 0);
-    Vector3d tao(0, 0, 0);
 
     //******************** Elbow Position Control *************************
 
@@ -296,24 +275,33 @@ int main( int argc, char** argv )
     double timeEnd = 2.5;
     posControl.init(qEnd,timeEnd);
 
+    // ************************** Dynamic system matrices ***************************************
+
+    // ************************** 2 DOF ***************************************
+
     // Matrix3d m_matrix = Matrix3d :: Zero () ;
     // Matrix3d c_matrix = Matrix3d :: Zero ();
     // //MatrixXd g_matrix(1,3);
     // Vector3d g_matrix = Vector3d :: Zero ();
     // Matrix3d b_matrix = Matrix3d :: Zero ();
 
+    // ************************** 1 DOF ***************************************
+
     double m_matrix; 
     double c_matrix;
     double g_matrix;
     double b_matrix;
 
+    // ************************** Initial conditions for dynamics ***************************************
 
+    Vector3d q(0, deg2rad(10), deg2rad(90));
+    Vector3d qd(0, 0, 0);
+    Vector3d qdd(0, 0, 0);
 
-    
+    Vector3d g_vec(g, 0, 0);
+    Vector3d tao(0, 0, 0);
 
-
-    
-
+    // ************************** Initial conditions for force control ***************************************
 
     double Ws = 0;
 
@@ -337,21 +325,7 @@ int main( int argc, char** argv )
 
     
 
-
-
-
-
-    std_msgs::Float64MultiArray msg_q_ESP3;
-    // std_msgs::Float64 msg_q_ESP3;
-    std_msgs::Float64MultiArray msg_q_state;
-
-    std_msgs::Float64MultiArray msg_gravity;
-
-    double q_tot[2];
-
-
-
-    Matrix3d q_neu;
+    double q_tot[2]; // Variable to test the range of the joints
 
     
 
@@ -359,8 +333,14 @@ int main( int argc, char** argv )
     {
         ros::spinOnce();
 
+        // ************************** Definition of the g vector with the lectures of the skin-patch near to the shoulder ************************** 
+
         g_vec[0] = gx1 * g;
         g_vec[1] = gy1 * g;
+
+        // ************************** Definition of the dynamic matrices for 2 DOF ************************** 
+
+
 
         // m_matrix << I233 + I311 * pow(sin(q[2]),2) + I322 * pow(cos(q[2]),2) + pow(L1,2)*(m2 + m3) + L1*L2*cos(q[1])*(m2 + 2*m3) + 2*L1*L3*m3*cos(q[1])*cos(q[2]) + pow(L2,2) * (m2 / 4 + m3) + L3 * m3 * cos(q[2]) * (2 * L2 + L3 * cos(q[2])), I233 + I311 * pow(sin(q[2]),2) + I322 * pow(cos(q[2]),2) + L1*L2*m2*cos(q[1])/2 + L1*m3*cos(q[1])*(L2 + L3*cos(q[2])) + pow(L2,2) * (m2 / 4 + m3) + L3 * m3 * cos(q[2]) * (2 * L2 + L3 * cos(q[2])), -L1*L3*m3*sin(q[1])*sin(q[2]),
         //             I233 + I311 * pow(sin(q[2]),2) + I322 * pow(cos(q[2]),2) + L1*L2*m2*cos(q[1])/2 + L1*m3*cos(q[1])*(L2 + L3*cos(q[2])) + pow(L2,2) * (m2 / 4 + m3) + L3 * m3 * cos(q[2]) * (2 * L2 + L3 * cos(q[2])), I233 + I311 * pow(sin(q[2]),2) + I322 * pow(cos(q[2]),2) + pow(L2,2) * (m2 / 4 + m3) + L3 * m3 * cos(q[2]) * (2 * L2 + L3 * cos(q[2])), 0,
@@ -376,18 +356,23 @@ int main( int argc, char** argv )
         //             0,b1,0,
         //             0,0,b2;
 
+        // ************************** Definition of the dynamic matrices for 1 DOF ************************** 
 
         m_matrix = I233 + L2*L2*m2/4;
         c_matrix = 0;//-1.5*L1*L2*m2*sin(q1)*qd1;
         g_matrix = - L2*g_vec[0]*m2*sin(q[1])/2 + L2*g_vec[1]*m2*sin(q[1])/2 ;//TODO 
         b_matrix = b1 * qd[1];//TODO
 
+
+
         
         // ****************** Position control elbow *****************************
         
         tao[1] = posControl.update(delta_t,q[1],qd[1],qdd[1]) + g_matrix;
 
+        
         /*
+        
         // ****************** Intern force control elbow *****************************
 
         Ws_elbow[0] = - force_elbow; //- prox_1;
@@ -429,22 +414,17 @@ int main( int argc, char** argv )
         }
         
 
-
-        
         */
         
+        
+        
 
 
         
-        // calculate qdd1 and integrate 
+        // Here qdd is calculated from tau and then qd and q are obtained by integrating
 
         qd[0] = 0;
         qdd[0] = 0;
-        // qd[2] = 0;
-        // qdd[2] = 0;
-        // tao[2] = 0;
-
-        // qdd= m_matrix.inverse() * (tao - g_matrix - (b_matrix + c_matrix) * qd);
 
         qdd[1] =(tao[1] - g_matrix - b_matrix)/m_matrix;
         
@@ -453,7 +433,6 @@ int main( int argc, char** argv )
         
         q_tot[0] = delta_t*qd[1] + q[1];
         q_tot[1] = delta_t*qd[2] + q[2];
-        //ROS_INFO_STREAM("Deb4");
         
         if (q_tot[0] >= 1.7 || q_tot[0] <= 0.17 ){
             qdd[1] = 0;
@@ -471,25 +450,22 @@ int main( int argc, char** argv )
             q[2] = q_tot[1];
         }
         
-        // ROS_WARN_STREAM("prox: "<<prox);
-        // ROS_WARN_STREAM("force_wrist: "<<force_wrist);
-
-        // ROS_WARN_STREAM("b_matrix: "<<b_matrix* qd);
-        // ROS_WARN_STREAM("c_matrix: "<<c_matrix* qd);
         
-        ROS_WARN_STREAM("tao: "<<tao[1] - g_matrix);
+        ROS_WARN_STREAM("tao: "<<tao[1]);
         ROS_WARN_STREAM("qdd: "<<qdd[1]);
         ROS_WARN_STREAM("qd: "<<qd[1]);
         ROS_WARN_STREAM("q: "<<q[1]);
 
+
+        // Preparation of the data to share with the ESP32
+
         q_ESP3[0] = q[1];
         q_ESP3[1] = q[2];
-        // q_ESP3 = q[2];
-
-        
-
         msg_q_ESP3.data = q_ESP3;
         exo_control_pub_q_ESP3.publish(msg_q_ESP3);
+
+
+        // Preparation of the state variables to publish
 
         q_state[0] = q[1];
         q_state[1] = qd[1];
@@ -499,29 +475,12 @@ int main( int argc, char** argv )
 
         exo_control_pub_q_state.publish(msg_q_state);
 
+        // Publishing q_des
 
-        // gravity[0] = force_elbow;
-        // gravity[1] = force_wrist;
-        // gravity[2] = magnitude_a;
+        msg_q_des.data = q[1] * 180 / M_PI; //msg_q_state.data ;
 
-        // msg_gravity.data = gravity;
+        exo_control_pub_q_desired.publish(msg_q_des);
 
-        // exo_control_pub_gravity.publish(msg_gravity);
-
-
-        // std_msgs::Float64MultiArray msg_q_desired;
-
-        // // q_desired[0] = m_q_des(1,0)*180/3.14159;
-        // // q_desired[1] = m_q_des(1,1)*180/3.14159;
-        // // q_desired[2] = m_q_des(1,2)*180/3.14159;
-
-        // // msg_q_desired.data = q_desired;
-
-        // msg_q_state.data = msg_q_state.data * 180/3.14159;
-
-        // exo_control_pub_q_desired.publish(msg_q_state);
-
-        // ros::spinOnce();
         r.sleep();
     }
     

@@ -40,7 +40,7 @@ namespace ExoControllers{
         
         std::vector<double> q_desired = {0, 0, 0};
 
-        ros::Publisher exo_control_pub_q_desire = n.advertise<std_msgs::Float64MultiArray>("q_des", 1); 
+        // ros::Publisher exo_control_pub_q_desire = n.advertise<std_msgs::Float64MultiArray>("q_des", 1); 
 
       public:
 
