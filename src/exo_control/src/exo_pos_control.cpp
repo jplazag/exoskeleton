@@ -79,7 +79,7 @@ namespace ExoControllers{
         aq1 = T.colPivHouseholderQr().solve(q);
       }
 
-      if(tc<=tf)
+      if(tc<=tf && abs(qi - qf) > 0.0001)
       {
       p << 1, tc, pow(tc,2), pow(tc,3), pow(tc,4), pow(tc,5);
       v << 0, 1, 2*tc, 3*pow(tc,2), 4*pow(tc,3), 5*pow(tc,4);
@@ -156,8 +156,9 @@ namespace ExoControllers{
         double Sq = qd1 - qd1r;
         m_tao = -m_kd*Sq + YrTheta(q1, qd1, qd1r, qdd1r);
 
-        ROS_WARN_STREAM("YrTheta: "<<YrTheta(q1, qd1, qd1r, qdd1r));
-        ROS_WARN_STREAM("m_kd*Sq: "<<m_kd*Sq);
+            ROS_WARN_STREAM("q_des: "<<m_q_des);
+            ROS_WARN_STREAM("YrTheta: "<<YrTheta(q1, qd1, qd1r, qdd1r));
+            ROS_WARN_STREAM("m_kd*Sq: "<<m_kd*Sq);
         
 
         // std_msgs::Float64MultiArray msg_q_desired;

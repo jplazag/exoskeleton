@@ -23,7 +23,7 @@ namespace ExoControllers{
             ForceControl(double L2, double L3);
             ~ForceControl();
             bool init(double W_des);
-            double update(double Ws, int n_func, double q3);
+            double update(double Ws, double Wds, int n_func, double q3);
 
     };
 }

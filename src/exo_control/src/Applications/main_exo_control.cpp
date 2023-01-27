@@ -68,6 +68,8 @@ Vector4d prox(0, 0, 0, 0);
 
 double prox_filtered = 0;
 double force_elbow_down = 0;
+double force_elbow = 0;
+double desired_force_elbow = 0;
 double force_elbow_up = 0;
 double force_wrist = 0;
 
@@ -274,9 +276,9 @@ int main( int argc, char** argv )
 
     ExoControllers::PosControl posControl(L1, L2, m2, b1, k1, theta1, gx1*g, gy1*g);
     Vector3d qEnd;
-    qEnd << deg2rad(40),0.0,0.0;
-    double timeEnd = 2.5;
-    posControl.init(qEnd,timeEnd);
+    double timeEnd;
+    
+    
 
     // ************************** Dynamic system matrices ***************************************
 
@@ -297,25 +299,53 @@ int main( int argc, char** argv )
 
     // ************************** Initial conditions for dynamics ***************************************
 
-    Vector3d q(0, deg2rad(10), deg2rad(90));
+    Vector3d q(0, deg2rad(80), deg2rad(90));
     Vector3d qd(0, 0, 0);
     Vector3d qdd(0, 0, 0);
 
     Vector3d g_vec(g, 0, 0);
     Vector3d tao(0, 0, 0);
 
+
+    // ****************************** Calibration routine **********************************************
+    int counter = 0;
+    double force_elbow_down_calibrated = 0;
+    double force_elbow_up_calibrated = 0;
+
+
+    while(ros::ok() && counter < 20)
+    {
+        ros::spinOnce();
+
+        force_elbow_down_calibrated += force_elbow_down;
+        force_elbow_up_calibrated += force_elbow_down;
+        counter +=1;
+        
+        
+        if(counter == 20)
+        {
+            force_elbow_down_calibrated /= 20;
+            force_elbow_up_calibrated /= 20;
+        }
+
+        ROS_WARN_STREAM("count: "<<counter);
+
+        r.sleep();
+
+    }
+
     // ************************** Initial conditions for force control ***************************************
 
     double Ws = 0;
 
     Vector2d Ws_elbow(0, 0);
-    Vector2d Wds_elbow( - 0.07, 0);
+    Vector2d Wds_elbow( force_elbow_down_calibrated, force_elbow_up_calibrated);
 
     ExoControllers::ForceControl forceControl_elbow_intern(L2, L3);
-    forceControl_elbow_intern.init(Ws_elbow[0]);
+    forceControl_elbow_intern.init(Wds_elbow[0]);
 
     ExoControllers::ForceControl forceControl_elbow_extern(L2, L3);
-    forceControl_elbow_extern.init(Ws_elbow[1]);
+    forceControl_elbow_extern.init(Wds_elbow[1]);
 
     Vector2d Ws_wrist(0, 0);
     Vector2d Wds_wrist( - 0.07, 0);
@@ -329,11 +359,16 @@ int main( int argc, char** argv )
     
 
     double q_tot[2]; // Variable to test the range of the joints
-
+    bool change_direction = false;
+    bool up = true;
+    bool down = true;
+    
+    bool still = false;
     
 
     while(ros::ok())
     {
+        
         ros::spinOnce();
 
         // ************************** Definition of the g vector with the lectures of the skin-patch near to the shoulder ************************** 
@@ -371,25 +406,108 @@ int main( int argc, char** argv )
         
         // ****************** Position control elbow *****************************
         
-        tao[1] = posControl.update(delta_t,q[1],qd[1],qdd[1]) + g_matrix;
+        // tao[1] = posControl.update(delta_t,q[1],qd[1],qdd[1]) + g_matrix;
 
         
-        /*
         
-        // ****************** Intern force control elbow *****************************
+        // if(force_elbow_down > force_elbow_down_calibrated)
+        // {
 
-        Ws_elbow[0] = - force_elbow_down; //- prox_1;
+        //     // ****************** Down force control elbow *****************************
 
-        tao[1] = forceControl_elbow_intern.update(Ws_elbow[0], 3, q[2]) + g_matrix[1];
+        //     Ws_elbow[0] = - force_elbow_down; 
 
-        // ****************** Extern force control elbow *****************************
+        //     tao[1] = forceControl_elbow_intern.update(Ws_elbow[0], 3, q[2]) + g_matrix;
 
-        Ws_elbow[1] = 0; //- force_elbow; //- prox_1;
+        // }
+        // else if(force_elbow_up > force_elbow_up_calibrated)
+        // {
+        // // ****************** Up force control elbow *****************************
 
-        tao[1] = forceControl_wrist_extern.update(Ws_elbow[1], 3, q[2]) + g_matrix[1];
+        //     Ws_elbow[1] = force_elbow_up; 
+
+        //     tao[1] = forceControl_wrist_extern.update(Ws_elbow[1], 3, q[2]) + g_matrix;
+        // }
+        // else
+        // {
+        //     tao[1] = g_matrix;
+        // }
+
+
+
+
+        if(force_elbow_down > force_elbow_down_calibrated + 0.01)
+        {
+            
+
+            down = true;
+
+            if(up == true) 
+            {
+                change_direction = true;
+                up = false;
+            }
+            force_elbow = - force_elbow_down;
+            desired_force_elbow = - force_elbow_down_calibrated;
+
+            if(change_direction || still)
+            {
+                timeEnd = 2.5;
+                qEnd << deg2rad(10),0.0,0.0;
+                posControl.init(qEnd,timeEnd);
+                
+            } 
+            still = false;
+            ROS_WARN_STREAM("condition: "<<1);
+
+        }
+        else if(force_elbow_up > force_elbow_up_calibrated + 0.01)
+        {
+            
+
+            up = true;
+
+            if(down == true) 
+            {
+                change_direction = true;
+                down = false;
+            }
+
+            force_elbow = force_elbow_up;
+            desired_force_elbow = force_elbow_up_calibrated;
+
+            if(change_direction || still)
+            {
+                timeEnd = 2.5;
+                qEnd << deg2rad(100),0.0,0.0;
+                posControl.init(qEnd,timeEnd);
+            }
+            still = false;
+            ROS_WARN_STREAM("condition: "<<2);
+        }
+        else
+        {
+            if(still == false)
+            {
+                timeEnd = 2.5;
+                qEnd << q[1],qd[1],qdd[1];
+                posControl.init(qEnd,timeEnd);
+                still = true;
+            }
+            
+            ROS_WARN_STREAM("condition: "<<3);
+        }
+
+        
+
+        tao[1] = 100 * forceControl_elbow_intern.update(force_elbow, desired_force_elbow, 3, q[2]) +  g_matrix  + posControl.update(delta_t,q[1],qd[1],qdd[1]);
+
+        ROS_WARN_STREAM("force control : "<<forceControl_elbow_intern.update(force_elbow, desired_force_elbow, 3, q[2]));
 
         // ****************** Intern force control wrist *****************************
 
+        /*
+        
 
         if (prox[0] != 0 || prox[1] != 0){
             if(prox[0] != 0){
@@ -453,9 +571,11 @@ int main( int argc, char** argv )
             q[2] = q_tot[1];
         }
         
-        ROS_WARN_STREAM("up force: "<<force_elbow_up);
-        ROS_WARN_STREAM("down force: "<<force_elbow_down);
-        ROS_WARN_STREAM("tao: "<<tao[1]);
+        // ROS_WARN_STREAM("up force: "<<force_elbow_up);
+        // ROS_WARN_STREAM("down force: "<<force_elbow_down);
+
+        // ROS_WARN_STREAM("tao: "<<tao[1]);
+        // ROS_WARN_STREAM("tao: "<<tao[1]);
         ROS_WARN_STREAM("qdd: "<<qdd[1]);
         ROS_WARN_STREAM("qd: "<<qd[1]);
         ROS_WARN_STREAM("q: "<<q[1]);
@@ -479,6 +599,7 @@ int main( int argc, char** argv )
 
         exo_control_pub_q_state.publish(msg_q_state);
 
+        change_direction = false;
 
         r.sleep();
     }

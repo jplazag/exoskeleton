@@ -31,7 +31,7 @@ namespace ExoControllers{
         return true;
     }
 
-    double ForceControl::update(double Ws, int n_func, double q3)
+    double ForceControl::update(double Ws, double Wds, int n_func, double q3)
     {
         if(!m_startFlag)
         {
@@ -40,13 +40,13 @@ namespace ExoControllers{
 
         switch(n_func){
             case 1:
-                m_tao = (m_L2 + m_L3 * std::cos(q3) - 0.2 * std::cos(q3)) * m_kp * (Ws - m_W_des); //Elbow with wrist
+                m_tao = (m_L2 + m_L3 * std::cos(q3) - 0.2 * std::cos(q3)) * m_kp * (Ws - Wds); //Elbow with wrist
                 break;
             case 2:
-                m_tao = - m_L3 * m_kp * (Ws - m_W_des);
+                m_tao = - m_L3 * m_kp * (Ws - Wds);
                 break;
             case 3:
-                m_tao = m_L2 * m_kp * (Ws - m_W_des); //Elbow without wrist
+                m_tao = m_L2 * m_kp * (Ws - Wds); //Elbow without wrist
                 break;
             
         }
