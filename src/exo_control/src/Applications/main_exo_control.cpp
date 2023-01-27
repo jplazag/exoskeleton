@@ -13,7 +13,7 @@ double deg2rad(double degree){
 
 
 
-
+// ************************************* Gravity definition ******************************************
 double gx1 = 0;
 double gy1 = 0;
 double gz1 = 0;
@@ -27,7 +27,7 @@ double a_beta = 0;
 
 void chatterCallback_g(const tum_ics_skin_msgs::SkinCellDataArray &msg)
 {
-    if(msg.data[0].cellId == 2){
+    if(msg.data[0].cellId == 2){ //Take the acceleration data from the skin patch near to the shoulder
 
         gx1 = msg.data[0].acc[0] ;
         gy1 = msg.data[0].acc[1] ;
@@ -38,18 +38,18 @@ void chatterCallback_g(const tum_ics_skin_msgs::SkinCellDataArray &msg)
     
 
     
-    magnitude_a = sqrt(pow(gx1,2) + pow(gy1,2));
+    magnitude_a = sqrt(pow(gx1,2) + pow(gy1,2)); // Calculate the magnitud of the gravity in the plane 
 
-    gx1 = gx1 / magnitude_a ;
+    gx1 = gx1 / magnitude_a ; // Components normalized
     gy1 = gy1 / magnitude_a ;
 
-    if(isnan(gx1) || isnan(gy1) || isnan(gz1)){
+    if(isnan(gx1) || isnan(gy1) || isnan(gz1)){ //Dealing with indeterminations
         gx1 = 1;
         gy1 = 0;
         gz1 = 0;
     }
 
-    a_beta = M_PI - std::atan2(-0.5699293974 , -0.821671881044706) ;
+    a_beta = M_PI - std::atan2(-0.5699293974 , -0.821671881044706) ; 
 
     // a_beta = M_PI - std::atan2(gy1 , gx1) ;
 
@@ -63,12 +63,15 @@ void chatterCallback_g(const tum_ics_skin_msgs::SkinCellDataArray &msg)
 
 
 
-
+// **************************** Proximity and force variables *************************************
 Vector4d prox(0, 0, 0, 0);
 
 double prox_filtered = 0;
-double force_elbow = 0;
+double force_elbow_down = 0;
+double force_elbow_up = 0;
 double force_wrist = 0;
+
+// **************************** Callback funtion to take the data from skin patches *****************
 
 void chatterCallback_p(const tum_ics_skin_msgs::SkinCellDataArray &msg){
 
@@ -106,7 +109,11 @@ void chatterCallback_p(const tum_ics_skin_msgs::SkinCellDataArray &msg){
 
     if(msg.data[0].cellId == 15){
         
-        force_elbow = msg.data[0].force[2] ;
+        force_elbow_down = msg.data[0].force[2] ;
+    }
+    if(msg.data[0].cellId == 13){
+        
+        force_elbow_up = msg.data[0].force[2] ;
     }
     if(msg.data[0].cellId == 9){
         
@@ -153,10 +160,6 @@ int main( int argc, char** argv )
 
 
 
-    //*************************** q_des Publisher ******************************
-
-    std_msgs::Float64 msg_q_des;
-    ros::Publisher exo_control_pub_q_desired = n.advertise<std_msgs::Float64MultiArray>("q_des", 1);
 
     ros::Rate r(100);
 
@@ -361,7 +364,7 @@ int main( int argc, char** argv )
         m_matrix = I233 + L2*L2*m2/4;
         c_matrix = 0;//-1.5*L1*L2*m2*sin(q1)*qd1;
         g_matrix = - L2*g_vec[0]*m2*sin(q[1])/2 + L2*g_vec[1]*m2*sin(q[1])/2 ;//TODO 
-        b_matrix = b1 * qd[1];//TODO
+        b_matrix = b1 ;//TODO
 
 
 
@@ -375,7 +378,7 @@ int main( int argc, char** argv )
         
         // ****************** Intern force control elbow *****************************
 
-        Ws_elbow[0] = - force_elbow; //- prox_1;
+        Ws_elbow[0] = - force_elbow_down; //- prox_1;
 
         tao[1] = forceControl_elbow_intern.update(Ws_elbow[0], 3, q[2]) + g_matrix[1];
 
@@ -421,12 +424,12 @@ int main( int argc, char** argv )
 
 
         
-        // Here qdd is calculated from tau and then qd and q are obtained by integrating
+        // *********************************  Here qdd is calculated from tau and then qd and q are obtained by integrating
 
         qd[0] = 0;
         qdd[0] = 0;
 
-        qdd[1] =(tao[1] - g_matrix - b_matrix)/m_matrix;
+        qdd[1] =(tao[1] - g_matrix - (b_matrix + c_matrix)* qd[1])/m_matrix;
         
         qd = delta_t*qdd + qd;
         
@@ -450,14 +453,15 @@ int main( int argc, char** argv )
             q[2] = q_tot[1];
         }
         
-        
+        ROS_WARN_STREAM("up force: "<<force_elbow_up);
+        ROS_WARN_STREAM("down force: "<<force_elbow_down);
         ROS_WARN_STREAM("tao: "<<tao[1]);
         ROS_WARN_STREAM("qdd: "<<qdd[1]);
         ROS_WARN_STREAM("qd: "<<qd[1]);
         ROS_WARN_STREAM("q: "<<q[1]);
 
 
-        // Preparation of the data to share with the ESP32
+        // ********************************* Preparation of the data to share with the ESP32
 
         q_ESP3[0] = q[1];
         q_ESP3[1] = q[2];
@@ -465,21 +469,16 @@ int main( int argc, char** argv )
         exo_control_pub_q_ESP3.publish(msg_q_ESP3);
 
 
-        // Preparation of the state variables to publish
+        // *********************************  Preparation of the state variables to publish
 
-        q_state[0] = q[1];
-        q_state[1] = qd[1];
-        q_state[2] = qdd[1];
+        q_state[0] = q[1]* 180 / M_PI;
+        q_state[1] = qd[1]* 180 / M_PI;
+        q_state[2] = qdd[1]* 180 / M_PI;
 
         msg_q_state.data = q_state;
 
         exo_control_pub_q_state.publish(msg_q_state);
 
-        // Publishing q_des
-
-        msg_q_des.data = q[1] * 180 / M_PI; //msg_q_state.data ;
-
-        exo_control_pub_q_desired.publish(msg_q_des);
 
         r.sleep();
     }
