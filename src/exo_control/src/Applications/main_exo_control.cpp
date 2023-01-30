@@ -5,6 +5,7 @@
 #include "tum_ics_skin_msgs/SkinCellDataArray.h" 
 #include <cmath> 
 #include <exo_control/exo_force_control.h>
+#include <algorithm>  
 
 
 double deg2rad(double degree){
@@ -366,6 +367,7 @@ int main( int argc, char** argv )
     bool still = false;
     
 
+
     while(ros::ok())
     {
         
@@ -436,7 +438,7 @@ int main( int argc, char** argv )
 
 
 
-        if(force_elbow_down > force_elbow_down_calibrated + 0.01)
+        if(force_elbow_down > force_elbow_down_calibrated + 0.01  && (q[1] > deg2rad(10)))
         {
             
 
@@ -450,10 +452,16 @@ int main( int argc, char** argv )
             force_elbow = - force_elbow_down;
             desired_force_elbow = - force_elbow_down_calibrated;
 
-            if(change_direction || still)
+            if((change_direction || still || abs(q[1] - qEnd[0]) < 0.05))
+            /* if(change_direction || still || !posControl.get_m_startFlag()) */
             {
-                timeEnd = 2.5;
-                qEnd << deg2rad(10),0.0,0.0;
+                timeEnd = 1.5;
+                if (q[1] - deg2rad(30) > deg2rad(10))
+                    qEnd << q[1] - deg2rad(30),0.0,0.0;
+                else
+                    qEnd << deg2rad(10),0.0,0.0;
+
+                
                 posControl.init(qEnd,timeEnd);
                 
             } 
@@ -461,7 +469,7 @@ int main( int argc, char** argv )
             ROS_WARN_STREAM("condition: "<<1);
 
         }
-        else if(force_elbow_up > force_elbow_up_calibrated + 0.01)
+        else if(force_elbow_up > force_elbow_up_calibrated + 0.01 && q[1] < deg2rad(95))
         {
             
 
@@ -476,10 +484,15 @@ int main( int argc, char** argv )
             force_elbow = force_elbow_up;
             desired_force_elbow = force_elbow_up_calibrated;
 
-            if(change_direction || still)
+            if((change_direction || still || (abs(q[1] - qEnd[0]) < 0.05)))
             {
-                timeEnd = 2.5;
-                qEnd << deg2rad(100),0.0,0.0;
+                timeEnd = 1.5;
+                if (q[1] + deg2rad(30) < deg2rad(100))
+                    qEnd << q[1] + deg2rad(30),0.0,0.0;
+                else
+                    qEnd << deg2rad(95 ),0.0,0.0; 
+
+
                 posControl.init(qEnd,timeEnd);
             }
             still = false;
@@ -489,10 +502,12 @@ int main( int argc, char** argv )
         {
             if(still == false)
             {
-                timeEnd = 2.5;
+                timeEnd = 0.5;
                 qEnd << q[1],qd[1],qdd[1];
                 posControl.init(qEnd,timeEnd);
                 still = true;
+
+                force_elbow = desired_force_elbow;
             }
             
             ROS_WARN_STREAM("condition: "<<3);
@@ -500,7 +515,7 @@ int main( int argc, char** argv )
 
         
 
-        tao[1] = 100 * forceControl_elbow_intern.update(force_elbow, desired_force_elbow, 3, q[2]) +  g_matrix  + posControl.update(delta_t,q[1],qd[1],qdd[1]);
+        tao[1] = 5 * forceControl_elbow_intern.update(force_elbow, desired_force_elbow, 3, q[2]) +  g_matrix  + posControl.update(delta_t,q[1],qd[1],qdd[1]);
 
         ROS_WARN_STREAM("force control : "<<forceControl_elbow_intern.update(force_elbow, desired_force_elbow, 3, q[2]));
 

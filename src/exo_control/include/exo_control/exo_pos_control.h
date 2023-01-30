@@ -60,6 +60,9 @@ namespace ExoControllers{
 
         double update(double delta_t, double q1, double qd1, double qdd1);
 
+        bool get_m_startFlag();
+
+
   };
 
 }

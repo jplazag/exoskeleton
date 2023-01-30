@@ -79,14 +79,16 @@ namespace ExoControllers{
         aq1 = T.colPivHouseholderQr().solve(q);
       }
 
-      if(tc<=tf && abs(qi - qf) > 0.0001)
+      if(tc<=tf)
+      /* if(tc<=tf) */
       {
-      p << 1, tc, pow(tc,2), pow(tc,3), pow(tc,4), pow(tc,5);
-      v << 0, 1, 2*tc, 3*pow(tc,2), 4*pow(tc,3), 5*pow(tc,4);
-      a << 0, 0, 2, 6*tc, 12*pow(tc,2), 20*pow(tc,3);
-      m_q_des =  p.transpose()*aq1;
-      m_qd_des = v.transpose()*aq1;
-      m_qdd_des = a.transpose()*aq1;
+        
+        p << 1, tc, pow(tc,2), pow(tc,3), pow(tc,4), pow(tc,5);
+        v << 0, 1, 2*tc, 3*pow(tc,2), 4*pow(tc,3), 5*pow(tc,4);
+        a << 0, 0, 2, 6*tc, 12*pow(tc,2), 20*pow(tc,3);
+        m_q_des =  p.transpose()*aq1;
+        m_qd_des = v.transpose()*aq1;
+        m_qdd_des = a.transpose()*aq1;
       }
       else{ 
         m_q_des = qf;
@@ -133,6 +135,12 @@ namespace ExoControllers{
     // 5. PD controller 
     double PosControl::update(double delta_t, double q1, double qd1, double qdd1)
     {
+
+        if (abs(m_qStart[0] - m_qEnd[0]) < 0.1) {
+            ROS_INFO_STREAM("ZU NAH!");
+            return 0;
+        }
+
         if(!m_startFlag)
         {
             m_timeStart = ros::Time::now().toSec();
@@ -172,6 +180,10 @@ namespace ExoControllers{
         // exo_control_pub_q_desire.publish(msg_q_desired);
 
         return m_tao;
+    }
+
+    bool PosControl::get_m_startFlag() {
+        return m_startFlag;
     }
 
 }
