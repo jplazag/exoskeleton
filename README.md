@@ -39,35 +39,35 @@ and comment the line
 
 
 
-Once everything is in the place it should, it’s time to run the ros nodes and start the communications.
+1. Once everything is in the place it should, it’s time to run the ros nodes and start the communications.
 
 
-In order to execute the code it is needed to open 5 tabs in a terminal and run the next command in the main folder of the workspace in order to source the setup.bash files.
+    In order to execute the code it is needed to open 5 tabs in a terminal and run the next command in the main folder of the workspace in order to source the setup.bash files.
 
 
-`source devel/setup.bash`
+    `source devel/setup.bash`
 
 
-Then in the first tab run the master node 
+2. Then in the first tab run the master node 
 
-`roscore`
+    `roscore`
 
-In the second one run the robot skin ROS driver
+3. In the second one run the robot skin ROS driver
 
-`roslaunch tum_ics_skin_driver_events skin_driver_ftdi.launch FTDI_SERIAL:=<Skin FTDI number>`
-
-
-In the third one run the launch file for the skin control 
-
-`roslaunch skin_control skin_control.launch`
+    `roslaunch tum_ics_skin_driver_events skin_driver_ftdi.launch FTDI_SERIAL:=<Skin FTDI number>`
 
 
-Next step is to enable the communication between ros and the programmable circuit board, which should already have the code from the folder ESP32. That code works for ESP32 and Arduino.
+4. In the third one run the launch file for the skin control 
 
-`rosrun rosserial_python serial_node.py <PORT> _baud:=921600`
+    `roslaunch skin_control skin_control.launch`
 
 
-And finally run the launch file of the exo_control, which runs all the processes needed to activate and move the exoskeleton
+5. Next step is to enable the communication between ros and the programmable circuit board, which should already have the code from the folder ESP32. That code works for ESP32 and Arduino.
 
-`roslaunch exo_control exo_control.launch`
+    `rosrun rosserial_python serial_node.py <PORT> _baud:=921600`
+
+
+6. And finally run the launch file of the exo_control, which runs all the processes needed to activate and move the exoskeleton
+
+    `roslaunch exo_control exo_control.launch`
 
