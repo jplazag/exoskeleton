@@ -311,8 +311,6 @@ common.h
 /opt/ros/noetic/include/ros/common.h
 boost/bind.hpp
 -
-xmlrpcpp/XmlRpcValue.h
--
 
 /opt/ros/noetic/include/ros/param.h
 forwards.h
