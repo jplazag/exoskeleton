@@ -94,7 +94,19 @@ void chatterCallback_p(const tum_ics_skin_msgs::SkinCellDataArray &msg){
 
 
 
+/* Main function
 
+This function has a lot of different functionalities which are commented inside itself.
+
+
+Between those functionalities it could be found:
+
+- Definition of the ROS nodes in charge of the communications (publishers and subscribers)
+- Initialization of the physical variables of the exo
+- Calibration routine for the force control, so the minimum force required to activate it can be defined
+- Algorithm to define how the force and position control cooperate between themselves in order to give support to the user
+
+ */
 
 int main( int argc, char** argv )
 {
@@ -293,11 +305,12 @@ int main( int argc, char** argv )
     
 
     double q_tot; // Variable to test the range of the joints
-    bool change_direction = false;
-    bool up = true;
-    bool down = true;
+
+    // bool change_direction = false;
+    // bool up = true;
+    // bool down = true;
     
-    bool still = false;
+    // bool still = false;
     
     double q_cos [2];
     q_cos [0] = deg2rad(10);
@@ -317,10 +330,10 @@ int main( int argc, char** argv )
 
     double q_temp_max = 0;
 
-    double T2;
-
-    double force_for_pos_control;
+    // double force_for_pos_control;
     bool new_tr = false;
+
+
     while(ros::ok())
     {
         
@@ -613,7 +626,7 @@ int main( int argc, char** argv )
 
         exo_control_pub_q_state.publish(msg_q_state);
 
-        change_direction = false;
+        // change_direction = false;
 
         r.sleep();
     }
