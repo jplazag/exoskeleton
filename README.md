@@ -1,5 +1,13 @@
 # Wearable Robotics: Final Project
 
+
+## Author information
+
+- Daniil Lisenkov
+- Juan Diego Plaza
+- Eduard Tarasenko
+
+
 ## Description 
 
 An exoskeleton is a wearable device that provides support to the human body and enhances its physical capabilities. Considering the great characteristics of those instruments, this project aims to program an exoskeleton for the upper part of the human body, in order to help people with limited mobility. Involving integrated control systems, sensors, and actuators.
@@ -70,4 +78,6 @@ and comment the line
 6. And finally run the launch file of the exo_control, which runs all the processes needed to activate and move the exoskeleton
 
     `roslaunch exo_control exo_control.launch`
+
+
 
