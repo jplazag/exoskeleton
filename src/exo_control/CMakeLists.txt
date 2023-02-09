@@ -143,7 +143,10 @@ foreach(target ${APP_TARGETS})
       Qt5::OpenGL
   )
 endforeach()
-     
+
+add_executable(keyboard_node src/keyboard_node.cpp)
+target_link_libraries(keyboard_node ${catkin_LIBRARIES})
+
 
 install(DIRECTORY include/${PROJECT_NAME}/
   DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}

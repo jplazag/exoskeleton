@@ -453,6 +453,21 @@ std_msgs_generate_messages_py/fast:
 .PHONY : std_msgs_generate_messages_py/fast
 
 # Convenience name for target.
+exo_control/CMakeFiles/keyboard_node.dir/rule:
+	cd /home/jplazag/exo_ws/build && $(MAKE) -f CMakeFiles/Makefile2 exo_control/CMakeFiles/keyboard_node.dir/rule
+.PHONY : exo_control/CMakeFiles/keyboard_node.dir/rule
+
+# Convenience name for target.
+keyboard_node: exo_control/CMakeFiles/keyboard_node.dir/rule
+
+.PHONY : keyboard_node
+
+# fast build rule for target.
+keyboard_node/fast:
+	cd /home/jplazag/exo_ws/build && $(MAKE) -f exo_control/CMakeFiles/keyboard_node.dir/build.make exo_control/CMakeFiles/keyboard_node.dir/build
+.PHONY : keyboard_node/fast
+
+# Convenience name for target.
 exo_control/CMakeFiles/actionlib_msgs_generate_messages_cpp.dir/rule:
 	cd /home/jplazag/exo_ws/build && $(MAKE) -f CMakeFiles/Makefile2 exo_control/CMakeFiles/actionlib_msgs_generate_messages_cpp.dir/rule
 .PHONY : exo_control/CMakeFiles/actionlib_msgs_generate_messages_cpp.dir/rule
@@ -1283,6 +1298,33 @@ src/exo_pos_control.cpp.s:
 	cd /home/jplazag/exo_ws/build && $(MAKE) -f exo_control/CMakeFiles/ExoControllers.dir/build.make exo_control/CMakeFiles/ExoControllers.dir/src/exo_pos_control.cpp.s
 .PHONY : src/exo_pos_control.cpp.s
 
+src/keyboard_node.o: src/keyboard_node.cpp.o
+
+.PHONY : src/keyboard_node.o
+
+# target to build an object file
+src/keyboard_node.cpp.o:
+	cd /home/jplazag/exo_ws/build && $(MAKE) -f exo_control/CMakeFiles/keyboard_node.dir/build.make exo_control/CMakeFiles/keyboard_node.dir/src/keyboard_node.cpp.o
+.PHONY : src/keyboard_node.cpp.o
+
+src/keyboard_node.i: src/keyboard_node.cpp.i
+
+.PHONY : src/keyboard_node.i
+
+# target to preprocess a source file
+src/keyboard_node.cpp.i:
+	cd /home/jplazag/exo_ws/build && $(MAKE) -f exo_control/CMakeFiles/keyboard_node.dir/build.make exo_control/CMakeFiles/keyboard_node.dir/src/keyboard_node.cpp.i
+.PHONY : src/keyboard_node.cpp.i
+
+src/keyboard_node.s: src/keyboard_node.cpp.s
+
+.PHONY : src/keyboard_node.s
+
+# target to generate assembly for a file
+src/keyboard_node.cpp.s:
+	cd /home/jplazag/exo_ws/build && $(MAKE) -f exo_control/CMakeFiles/keyboard_node.dir/build.make exo_control/CMakeFiles/keyboard_node.dir/src/keyboard_node.cpp.s
+.PHONY : src/keyboard_node.cpp.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -1313,6 +1355,7 @@ help:
 	@echo "... geometry_msgs_generate_messages_eus"
 	@echo "... std_msgs_generate_messages_nodejs"
 	@echo "... std_msgs_generate_messages_py"
+	@echo "... keyboard_node"
 	@echo "... actionlib_msgs_generate_messages_cpp"
 	@echo "... tum_ics_skin_msgs_generate_messages_py"
 	@echo "... std_msgs_generate_messages_lisp"
@@ -1374,6 +1417,9 @@ help:
 	@echo "... src/exo_pos_control.o"
 	@echo "... src/exo_pos_control.i"
 	@echo "... src/exo_pos_control.s"
+	@echo "... src/keyboard_node.o"
+	@echo "... src/keyboard_node.i"
+	@echo "... src/keyboard_node.s"
 .PHONY : help
 
 

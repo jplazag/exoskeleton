@@ -37,6 +37,8 @@ exo_control/exo_force_control.h
 -
 algorithm
 -
+std_msgs/String.h
+/home/jplazag/exo_ws/src/exo_control/src/Applications/std_msgs/String.h
 
 /opt/ros/noetic/include/ros/advertise_options.h
 ros/forwards.h
@@ -750,6 +752,22 @@ ros/builtin_message_traits.h
 ros/message_operations.h
 -
 std_msgs/MultiArrayDimension.h
+-
+
+/opt/ros/noetic/include/std_msgs/String.h
+string
+-
+vector
+-
+memory
+-
+ros/types.h
+-
+ros/serialization.h
+-
+ros/builtin_message_traits.h
+-
+ros/message_operations.h
 -
 
 /opt/ros/noetic/include/tum_ics_skin_msgs/SkinCellData.h

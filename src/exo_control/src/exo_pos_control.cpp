@@ -110,6 +110,8 @@ namespace ExoControllers{
             m_qd_des = qpf;
             m_qdd_des = qppf;
         }
+        if(m_q_des > 1.7) m_q_des = 1.7;
+        if(m_q_des < 0.17) m_q_des = 0.17;
         }
 
 

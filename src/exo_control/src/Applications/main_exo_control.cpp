@@ -6,6 +6,7 @@
 #include <cmath> 
 #include <exo_control/exo_force_control.h>
 #include <algorithm>  
+#include "std_msgs/String.h"
 
 
 double deg2rad(double degree){
@@ -107,6 +108,17 @@ Between those functionalities it could be found:
 - Algorithm to define how the force and position control cooperate between themselves in order to give support to the user
 
  */
+
+bool if_cont;
+void chatterCallback(const std_msgs::String::ConstPtr& msg)
+{
+    ROS_INFO_STREAM("loop");
+    if (msg->data == "z") {
+    ROS_INFO_STREAM("continue");
+    if_cont = true;}
+    else if_cont =  false;
+
+}
 
 int main( int argc, char** argv )
 {
@@ -230,7 +242,7 @@ int main( int argc, char** argv )
 
     // ************************** Initial conditions for dynamics ***************************************
 
-    double q = deg2rad(11);
+    double q = deg2rad(90);
     double qd = 0;
     double qdd = 0;
 
@@ -239,105 +251,100 @@ int main( int argc, char** argv )
 
 
     // ****************************** Calibration routine **********************************************
-    int counter = 0;
-    double force_elbow_down_calibrated = 0;
-    double force_elbow_up_calibrated = 0;
+    /* This calibration routine takes a certain number of samples equal to "n_values" and choose the 
+        maximal value, in order to set that value as the minimum value required to activate the force control*/
 
-    double force_elbow_down_deviation = 0;
-    double force_elbow_up_deviation = 0;
+    q_ESP3[0] = q;
+    q_ESP3[1] = 0;
+    
+    msg_q_ESP3.data = q_ESP3;
+    ROS_INFO_STREAM("start position");
+    
+    /* ros::spinOnce();
+    r.sleep(); */
+    ros::spinOnce();
+    exo_control_pub_q_ESP3.publish(msg_q_ESP3);
+    ros::spinOnce();
+    /* ros::spinOnce();
+    r.sleep(); */
 
-    int n_values = 20;
 
-    double values_up [n_values];
+    
+    int n_values = 200; // Number of values to take in account in the calibration routine
+    int counter = 0; // Counter to follow the number of values that were taken in account, so the loop stops when counter = n_values
 
-    double values_down [n_values];
+    double force_elbow_down_calibrated = 0; // Variable for the minimum force value required to activate the force control downward
+    double force_elbow_up_calibrated = 0; // Variable for the minimum force value required to activate the force control upward
 
+    
+
+    ROS_INFO_STREAM("Estimate calibrated values");
 
     while(ros::ok() && counter < n_values)
     {
         ros::spinOnce();
 
-        values_up [counter] = force_elbow_down;
-
-        values_down [counter] = force_elbow_down;
-
-        force_elbow_down_calibrated += force_elbow_down;
-        force_elbow_up_calibrated += force_elbow_down;
+        if (force_elbow_down > force_elbow_down_calibrated) force_elbow_down_calibrated = force_elbow_down; // Take the maximum value
+        if (force_elbow_up > force_elbow_up_calibrated) force_elbow_up_calibrated = force_elbow_up; // Take the maximum value
         counter +=1;
-        
-        
-        if(counter == n_values)
-        {
-            force_elbow_down_calibrated /= n_values;
-            force_elbow_up_calibrated /= n_values;
-
-            // for(int i = 0; i < n_values; i++)
-            // {
-            //     force_elbow_down_deviation += pow( force_elbow_down_calibrated - values_down [i] , 2);
-            //     force_elbow_up_deviation += pow(force_elbow_up_calibrated - values_up [i], 2);
-            // }
-
-            // force_elbow_down_deviation /= n_values;
-            // force_elbow_up_deviation /= n_values; 
-
-            // force_elbow_down_calibrated += force_elbow_down_deviation;
-            // force_elbow_up_calibrated += force_elbow_up_deviation;
-
-        }
-
-
-        
-        
-
-        ROS_WARN_STREAM("count: "<<counter);
 
         r.sleep();
-
     }
+
+    ROS_INFO_STREAM("Start control");
+    q = deg2rad(11);
+    q_ESP3[0] = q;
+    q_ESP3[1] = 0;
+    msg_q_ESP3.data = q_ESP3;
+    exo_control_pub_q_ESP3.publish(msg_q_ESP3);
+    
+
+    
+
+    
 
     // ************************** Initial conditions for force control ***************************************
 
+
+    
 
     ExoControllers::ForceControl forceControl_elbow_intern(L2);
     forceControl_elbow_intern.init();
 
 
-    
+    // ************************** Variables for control algorithm ***************************************
 
-    double q_tot; // Variable to test the range of the joints
-
-    // bool change_direction = false;
-    // bool up = true;
-    // bool down = true;
+    // Further explanation about how the algorithm works can be found below
     
-    // bool still = false;
     
-    double q_cos [2];
-    q_cos [0] = deg2rad(10);
-    q_cos [1] = deg2rad(100);
-    double time [3];
+    double q_cos [2]; // Array which stores the peaks of the generate trajectory
+    q_cos [0] = deg2rad(10); // Minimum peak
+    q_cos [1] = deg2rad(100); // Maximum peak
+    
+    double time [2]; // Array which stores the time when peaks where reached
     time[1] = 2.5;
-    time[2] = ros::Time::now().toSec();
-    bool calcule_q1 = false;
-    bool calcule_function = false;
-    bool run_posControl = false;
+    
+    bool run_posControl = false; // Boolean which defines if position control is used or not
 
 
-    double q_predicted = 0;
-    double amplitude;
-    double offset;
-    double counter_test = 0;
+    double q_predicted = 0; // Next point to be followed by the position control
 
-    double q_temp_max = 0;
+    double force_control = 0; // Stores the tau from force control
+    double position_control = 0; // Stores the tau from position control
 
-    // double force_for_pos_control;
-    bool new_tr = false;
+    double q_temp_max = 0; // Stores maximum value to the define the maximum peak
 
+    
+    bool new_tr = false; // Defines if a new trajectory is going to be generate
+
+    double q_tot; // Variable mess if q is still in the desire range of 10 - 100 degrees
 
     while(ros::ok())
     {
         
         ros::spinOnce();
+
+        /* This algorithm defines first the variables related to the dynamic of the system in order to model the system */
 
         // ************************** Definition of the g vector with the lectures of the skin-patch near to the shoulder ************************** 
 
@@ -348,130 +355,50 @@ int main( int argc, char** argv )
         // ************************** Definition of the dynamic matrices for 1 DOF ************************** 
 
         m_matrix = I233 + L2*L2*m2/4;
-        c_matrix = 0;//-1.5*L1*L2*m2*sin(q1)*qd1;
-        g_matrix = - L2*g_vec[0]*m2*sin(q)/2 + L2*g_vec[1]*m2*sin(q)/2 ;//TODO 
-        b_matrix = b1 ;//TODO
+        c_matrix = 0;
+        g_matrix = - L2*g_vec[0]*m2*sin(q)/2 + L2*g_vec[1]*m2*sin(q)/2 ;
+        b_matrix = b1 ;
 
 
 
 
 
 
-
-        // if(force_elbow_down > force_elbow_down_calibrated + 0.01  && (q > deg2rad(10)))
-        // {
-            
-
-        //     down = true;
-
-        //     if(up == true) 
-        //     {
-        //         change_direction = true;
-        //         up = false;
-        //     }
-        //     force_elbow = - force_elbow_down;
-        //     desired_force_elbow = - force_elbow_down_calibrated;
-
-        //     if((change_direction || still || abs(q - qEnd[0]) < 0.05))
-        //     /* if(change_direction || still || !posControl.get_m_startFlag()) */
-        //     {
-        //         timeEnd = 1.5;
-        //         if (q - deg2rad(30) > deg2rad(10))
-        //             qEnd << q - deg2rad(30),0.0,0.0;
-        //         else
-        //             qEnd << deg2rad(10),0.0,0.0;
-
-                
-        //         posControl.init(qEnd,timeEnd);
-                
-        //     } 
-        //     still = false;
-        //     ROS_WARN_STREAM("condition: "<<1);
-
-        // }
-        // else if(force_elbow_up > force_elbow_up_calibrated + 0.01 && q < deg2rad(95))
-        // {
-            
-
-        //     up = true;
-
-        //     if(down == true) 
-        //     {
-        //         change_direction = true;
-        //         down = false;
-        //     }
-
-        //     force_elbow = force_elbow_up;
-        //     desired_force_elbow = force_elbow_up_calibrated;
-
-        //     if((change_direction || still || (abs(q - qEnd[0]) < 0.05)))
-        //     {
-        //         timeEnd = 1.5;
-        //         if (q + deg2rad(30) < deg2rad(100))
-        //             qEnd << q + deg2rad(30),0.0,0.0;
-        //         else
-        //             qEnd << deg2rad(95 ),0.0,0.0; 
-
-
-        //         posControl.init(qEnd,timeEnd);
-        //     }
-        //     still = false;
-        //     ROS_WARN_STREAM("condition: "<<2);
-        // }
-        // else
-        // {
-        //     if(still == false)
-        //     {
-        //         timeEnd = 0.5;
-        //         qEnd << q,qd,qdd;
-        //         posControl.init(qEnd,timeEnd);
-        //         still = true;
-
-        //         force_elbow = desired_force_elbow;
-        //     }
-            
-        //     ROS_WARN_STREAM("condition: "<<3);
-        // }
+        /* Defines time[0], which is the time when the minimum peak of the sinusoidal wave is reached */
+        
         if(q - deg2rad(12) < 0.001)
         {
             time[0] = ros::Time::now().toSec();
         }
 
         
-
+        /* Then comes a routine where is determined if the force control is activated or not */
 
         if(force_elbow_up > force_elbow_up_calibrated + 0.01 )
         {
             force_elbow = force_elbow_up;
             desired_force_elbow = force_elbow_up_calibrated;
-
-            if (q > q_temp_max){
-                q_temp_max = q;
-            } else if (q < q_temp_max - deg2rad(5)) {
-                q_cos[1] = q_temp_max;
-                time[1] = ros::Time::now().toSec() - time[0];
-
-                run_posControl = true;
-
-                q_temp_max = q + deg2rad(1);
-                new_tr = true;
-            
-            }
-            
         }
+
         else if(force_elbow_down > force_elbow_down_calibrated + 0.01 )
         {
             force_elbow = -force_elbow_down;
             desired_force_elbow = -force_elbow_down_calibrated;
 
-            if (q > q_temp_max){
+            /* Inside of this routine there is an algorithm in charge defining a new maximal peak 
+            when the user applies a force downwards, here is defined time[1] too, as the time between 
+            two peaks, half a period. What is going to be used as a value related to the frequence of 
+            the generated trajectory */
+
+            if (q > q_temp_max /* && !new_tr */){
                 q_temp_max = q;
             } else if (q < q_temp_max - deg2rad(5)) {
+
                 q_cos[1] = q_temp_max;
                 time[1] = ros::Time::now().toSec() - time[0];
                 run_posControl = true;
 
-                q_temp_max = q + deg2rad(1);
+                q_temp_max = q + deg2rad(1); 
                 new_tr = true;
             
             }
@@ -484,48 +411,55 @@ int main( int argc, char** argv )
             desired_force_elbow = 0;
         }
 
-        // if(calcule_function )
-        // {
-        //     ROS_WARN_STREAM("PosControl ");
-        //     amplitude = (q_cos[1] - q_cos[0])/ 2; 
-        //     offset = q_cos[0] + amplitude;
-        //     q_predicted = - amplitude * std::cos( (ros::Time::now().toSec() + time[1] ) / time[1]  * M_PI) + offset;
-        //     timeEnd = time[1];
-        //     qEnd << q_predicted,0,0;
+        
 
-        //     posControl.init(qEnd,timeEnd);
+        /* Then if the two peaks required to generate a new trajectory were defined, the run_posControl 
+        boolean was setted to true and the system is prepared to run the position control */
+        
+        if(run_posControl) {
 
-        //     run_posControl = true;
-        //     calcule_function = false;
-            
-            
-        // }
-
-        if(run_posControl)
-        {
-
-            if(ros::Time::now().toSec() > time[2] + time[1])
+            if((abs(q - qEnd[0]) < 0.001) || new_tr )
             {
                 
-                counter_test ++;
-                // amplitude = (q_cos[1] - q_cos[0]) / 2;
-                // offset = q_cos[0] + amplitude;
-                // q_predicted = - amplitude * std::cos( (ros::Time::now().toSec() + time[1] ) / time[1]  * M_PI) + offset;
                 if(abs(q_predicted - q_cos[0]) < 0.0001)
+                {
                     q_predicted = q_cos[1];
+                }
                 else
+                {
                     q_predicted = q_cos[0];
+                }
 
                 qEnd << std::min(1.6, q_predicted),0,0;
+
+                //In case there was a problem with the time measurement, it is restringed to a range of 1 - 3 seconds
+
+                if (time[1] < 1) time[1] = 1;
+
+                if (time[1] > 3) time[1] = 3;
+
+                //Here the time in which the next peak is wanted to be reached is defined
+
                 timeEnd = time[1];
-                time[2] = ros::Time::now().toSec();
+                
+                // Here the new trajectory is defined
                 posControl.init(qEnd,timeEnd);
                 new_tr = false;
 
                 
             }
-            ROS_WARN_STREAM("run_pos_control_loop :"<<counter_test);
-            tao = 5 * forceControl_elbow_intern.update(force_elbow, desired_force_elbow) + 0.01 * posControl.update(delta_t,q,qd,qdd) +  g_matrix;
+
+            force_control = 10 * forceControl_elbow_intern.update(force_elbow, desired_force_elbow);
+            position_control = 0.01 * posControl.update(delta_t,q,qd,qdd);
+
+            // In case the position control disturbs the normal behavior of the force control it is shutted down
+
+            if(force_control * position_control < 0)
+            {
+                tao = force_control +  g_matrix;
+                //q_temp_max = 0;
+            } else tao = force_control + position_control +  g_matrix;
+            
             ROS_WARN_STREAM("force control : "<<forceControl_elbow_intern.update(force_elbow, desired_force_elbow));
             ROS_WARN_STREAM("pose control : "<<posControl.update(delta_t,q,qd,qdd));
             
@@ -533,46 +467,13 @@ int main( int argc, char** argv )
         }
         else 
         {
-            tao = 5 * forceControl_elbow_intern.update(force_elbow, desired_force_elbow) +  g_matrix;
+            tao = 10 * forceControl_elbow_intern.update(force_elbow, desired_force_elbow) +  g_matrix;
             ROS_WARN_STREAM("force control : "<<forceControl_elbow_intern.update(force_elbow, desired_force_elbow));
             
         }
-
         
-        
-
-
-
-
-
-
-        /* tao = 10 * forceControl_elbow_intern.update(force_elbow, desired_force_elbow) +  g_matrix + posControl.update(delta_t,q,qd,qdd); */
-
-        
-        
-        // if(ros::Time::now().toSec() > time[3] + time[1])
-        // {
-        //     counter_test += 1;
-        //     amplitude = (q_cos[1] - q_cos[0]) / 2;
-        //     offset = q_cos[0] + amplitude;
-        //     q_predicted = - amplitude * std::cos( (ros::Time::now().toSec() + time[1] ) / time[1]  * M_PI) + offset;
-        //     qEnd << std::min(1.6, q_predicted),0,0;
-        //     timeEnd = time[1];
-        //     time[3] = ros::Time::now().toSec();
-        //     posControl.init(qEnd,timeEnd);
-
-        // }
-        // ROS_WARN_STREAM("q_predicted: " <<q_predicted);
-        // ROS_WARN_STREAM("loop: " <<counter_test);
-        // tao = posControl.update(delta_t,q,qd,qdd) +  g_matrix;
-        
-        
-        
-        
-        
-
-
-        
+         
+                
         // *********************************  Here qdd is calculated from tau and then qd and q are obtained by integrating
 
 
@@ -591,21 +492,16 @@ int main( int argc, char** argv )
         else {
             q = q_tot;
         }
-        
-        
-        
-        // ROS_WARN_STREAM("up force: "<<force_elbow_up);
-        // ROS_WARN_STREAM("down force: "<<force_elbow_down);
 
-        // ROS_WARN_STREAM("tao: "<<tao);
         ROS_WARN_STREAM("time: "<<time[0]);
         ROS_WARN_STREAM("time 1: "<<time[1]);
-        // ROS_WARN_STREAM("qdd: "<<qdd);
-        // ROS_WARN_STREAM("qd: "<<qd);
         ROS_WARN_STREAM("q: "<<q);
 
         ROS_WARN_STREAM("q_0: "<<q_cos[0]);
         ROS_WARN_STREAM("q_1: "<<q_cos[1]);
+        ROS_WARN_STREAM("force_d: "<<force_elbow_down);
+        ROS_WARN_STREAM("force_u: "<<force_elbow_up);
+        
 
 
         // ********************************* Preparation of the data to share with the ESP32
@@ -625,8 +521,6 @@ int main( int argc, char** argv )
         msg_q_state.data = q_state[0];
 
         exo_control_pub_q_state.publish(msg_q_state);
-
-        // change_direction = false;
 
         r.sleep();
     }
