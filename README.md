@@ -80,4 +80,10 @@ and comment the line
     `roslaunch exo_control exo_control.launch`
 
 
+## Video
+
+In this video you can see the complete operation of the system.
+
+[![Watch the video](https://img.youtube.com/vi/hnFIgHge1G0/0.jpg)](https://youtu.be/hnFIgHge1G0)
+
 
