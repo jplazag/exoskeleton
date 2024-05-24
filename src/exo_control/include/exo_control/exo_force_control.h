@@ -13,17 +13,15 @@ namespace ExoControllers{
         private:
             ros::NodeHandle n;
             double m_L2;
-            double m_L3;
             double m_kp;
             bool m_startFlag;
-            double m_W_des;
             double m_tao;
             
         public:
-            ForceControl(double L2, double L3);
+            ForceControl(double L2);
             ~ForceControl();
-            bool init(double W_des);
-            double update(double Ws, int n_func, double q3);
+            bool init();
+            double update(double Ws, double Wds);
 
     };
 }

@@ -7,4 +7,4 @@
 # new environment variables
 
 # modified environment variables
-export PWD='/home/jplazag/Documents/Juan Diego/TUM/Exoskeletons/Tutorial_4/exo_ws/build'
+export PWD='/home/jplazag/exo_ws/build'

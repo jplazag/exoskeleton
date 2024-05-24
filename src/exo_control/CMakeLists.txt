@@ -143,7 +143,7 @@ foreach(target ${APP_TARGETS})
       Qt5::OpenGL
   )
 endforeach()
-     
+
 
 install(DIRECTORY include/${PROJECT_NAME}/
   DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}

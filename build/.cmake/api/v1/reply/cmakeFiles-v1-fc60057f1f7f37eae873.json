@@ -1070,7 +1070,7 @@
 		},
 		{
 			"isExternal" : true,
-			"path" : "/home/jplazag/Documents/Juan Diego/TUM/Exoskeletons/Tutorial_4/exo_ws/devel/share/exo_control/cmake/exo_control-msg-paths.cmake"
+			"path" : "/home/jplazag/exo_ws/devel/share/exo_control/cmake/exo_control-msg-paths.cmake"
 		},
 		{
 			"isExternal" : true,
@@ -2409,7 +2409,7 @@
 		},
 		{
 			"isExternal" : true,
-			"path" : "/home/jplazag/Documents/Juan Diego/TUM/Exoskeletons/Tutorial_4/exo_ws/devel/share/tutorial_2/cmake/tutorial_2-msg-paths.cmake"
+			"path" : "/home/jplazag/exo_ws/devel/share/tutorial_2/cmake/tutorial_2-msg-paths.cmake"
 		},
 		{
 			"isExternal" : true,

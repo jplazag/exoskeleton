@@ -1,26 +1,35 @@
+# Lenghts
 L1: 0.4
 L2: 0.3
 L3: 0.1
+# Masses
 m2: 1.0
 m3: 0.5
+# Damping constants
 b1: 0.1
 b2: 0.02
+# Stiffness constants
 k1: 4
 k2: 1
+# Offsets in joints
 theta1: 0.15
 theta2: 0.1
+# Inertia
 I211: 0.1
 I222: 0.1
 I233: 0.01
 I311: 0.001
 I322: 0.001
 I333: 0.001
+# Gravity
 g: -9.81
 
+# Position control constants
 pos_ctrl:
-  kp: 50
-  kd: 10
+  kp: 10
+  kd: 5
   ki: 0.0
 
+# Force control constants
 force_ctrl:
-  kp: 0.05
+  kp: 2

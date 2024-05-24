@@ -532,6 +532,19 @@ std_msgs_generate_messages_py/fast:
 .PHONY : std_msgs_generate_messages_py/fast
 
 #=============================================================================
+# Target rules for targets named keyboard_node
+
+# Build rule for target.
+keyboard_node: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 keyboard_node
+.PHONY : keyboard_node
+
+# fast build rule for target.
+keyboard_node/fast:
+	$(MAKE) -f exo_control/CMakeFiles/keyboard_node.dir/build.make exo_control/CMakeFiles/keyboard_node.dir/build
+.PHONY : keyboard_node/fast
+
+#=============================================================================
 # Target rules for targets named actionlib_msgs_generate_messages_cpp
 
 # Build rule for target.
@@ -1443,6 +1456,7 @@ help:
 	@echo "... geometry_msgs_generate_messages_eus"
 	@echo "... std_msgs_generate_messages_nodejs"
 	@echo "... std_msgs_generate_messages_py"
+	@echo "... keyboard_node"
 	@echo "... actionlib_msgs_generate_messages_cpp"
 	@echo "... tum_ics_skin_msgs_generate_messages_py"
 	@echo "... std_msgs_generate_messages_lisp"
